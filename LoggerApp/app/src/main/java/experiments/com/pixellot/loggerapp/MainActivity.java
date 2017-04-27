@@ -13,12 +13,14 @@ import experiments.com.pixellot.logger.Logger;
 
 public class MainActivity extends AppCompatActivity {
 
+    Logger logger;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         try {
-            Logger.init(this);
+            logger = new Logger(this);
+//            Logger.init(this);
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Please make sure you have permission to access file", Toast.LENGTH_LONG).show();
@@ -34,14 +36,14 @@ public class MainActivity extends AppCompatActivity {
     private void testBenchmark() {
         long startTime = System.nanoTime();
         for (int i = 0; i < 1000; i++) {
-            Logger.d("Logger", "Logger->Message" + i);
+            logger.d("Logger", "Logger->Message" + i);
         }
         Log.d("LoggerResult", "Logger ->Time:" + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime));
 
-        startTime = System.nanoTime();
-        for (int i = 0; i < 1000; i++) {
-            Log.d("Logger", "Default->Message" + i);
-        }
-        Log.d("DefaultLoggerResult", "Time:" + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime));
+//        startTime = System.nanoTime();
+//        for (int i = 0; i < 1000; i++) {
+//            Log.d("Logger", "Default->Message" + i);
+//        }
+//        Log.d("DefaultLoggerResult", "Time:" + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime));
     }
 }

@@ -8,10 +8,8 @@ import java.util.GregorianCalendar;
  */
 
 public class LoggerUtils {
-    public static String getDefaultFileName()
-    {
+    public static String getDefaultFileName() {
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
-        return "Log" + gregorianCalendar.get(Calendar.MONTH) + gregorianCalendar.get(Calendar.YEAR) + ".txt";
+        return C.PREFIX + gregorianCalendar.get(Calendar.MONTH) + gregorianCalendar.get(Calendar.YEAR) + ".txt";
     }
-//    public static void copyAllToFolder(File folder, )
 }
