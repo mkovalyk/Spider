@@ -1,0 +1,29 @@
+Questions:
+	- When to close the BufferedOutputStream?
+	- Logging from different threads? How ouputStream will behave?
+	-  
+1. Tests
+	- Invoke log.d from different thread
+	- stress testing.
+2. set log level at runtime can cause information leak.
+3. Copying log files 
+4. Logger internals:
+	- Sleeping and waking up 
+	- Limiting
+5. Use DB? Abstracts from Storage?
+	
+	
+	
+Issues:
+	- Thread, running for some time before got killed
+	- Potential information leak
+	- Log.d() can not be removed from bytecode
+	-
+
+Ideas:
+    1. Use queue of already logged models to prevent redundant creation of the models.
+    2. Use handler to wake up thread, go to sleep?
+    3. set log level
+    4. Add copying feature
+    5. Add log manager to manage logs
+    6. Use internal app's storage by default.
