@@ -2,6 +2,9 @@ package experiments.com.pixellot.logger;
 
 import android.content.Context;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -18,12 +21,14 @@ import java.util.GregorianCalendar;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created on 17.02.17.
  */
 
 public class Logger {
+    public static final int MESSAGE_WAKE_UP = 1;
     public static final String TAG = Logger.class.getSimpleName();
     private static final int DEBUG = 2;
     /**
@@ -39,16 +44,13 @@ public class Logger {
     private final GregorianCalendar gregorianCalendar = new GregorianCalendar();
     private final int logLevel;
     private final StringBuilder stringBuilder = new StringBuilder();
-    private Thread handlerThread;
+    private HandlerThread handlerThread;
     private Queue<LogModel> logModels = new LinkedBlockingQueue<>();
     private BufferedOutputStream fileOutputStream;
     private long timeOflastLoggedMessage;
-    private boolean isRunning = true;
+    private AtomicBoolean isRunning = new AtomicBoolean(false);
     private Listener listener;
-
-    public void setListener(Listener listener) {
-        this.listener = listener;
-    }
+    private Handler handler;
 
     public Logger(Context context) throws IOException {
         logLevel = DEBUG;
@@ -71,16 +73,20 @@ public class Logger {
 //        initHandler();
     }
 
+    public static void flush() {
+//        instance.handler.sendMessage(instance.handler.obtainMessage(FINISH_BATCH));
+    }
+
+    public static void sleep() {
+//        instance.handler.sendMessage(instance.handler.obtainMessage(SLEEP));
+    }
+
     public void d(String tag, String message) {
         send(DEBUG, tag, message, Thread.currentThread().getId(), null);
     }
 
     public void e(String tag, String message) {
         send(ERROR, tag, message, Thread.currentThread().getId(), null);
-    }
-
-    public static void flush() {
-//        instance.handler.sendMessage(instance.handler.obtainMessage(FINISH_BATCH));
     }
 
     public void i(String tag, String message) {
@@ -93,8 +99,22 @@ public class Logger {
 //        }
     }
 
-    public static void sleep() {
-//        instance.handler.sendMessage(instance.handler.obtainMessage(SLEEP));
+    public boolean isInitialized() {
+        return handlerThread != null && handler != null;
+    }
+
+    public void quit() {
+        if (isInitialized()) {
+            handlerThread.quitSafely();
+        } else {
+            if (handlerThread != null) {
+                handlerThread.quitSafely();
+            }
+        }
+    }
+
+    public void setListener(Listener listener) {
+        this.listener = listener;
     }
 
     public void v(String tag, String message) {
@@ -103,63 +123,6 @@ public class Logger {
 
     public void w(String tag, String message) {
         send(WARN, tag, message, Thread.currentThread().getId(), null);
-    }
-
-    private void initHandler() throws FileNotFoundException {
-        handlerThread = new Thread("LoggerThread") {
-            @Override
-            public void run() {
-                int counter = 0;
-                while (isRunning || logModels.size() > 0) {
-                    LogModel model = logModels.poll();
-                    if (model != null) {
-                        log(model);
-                        Log.d(model.tag, model.message + " " + logModels.size());
-                    } else {
-                        continue;
-                    }
-                    counter++;
-                    if (counter == 50) {
-                        try {
-                            fileOutputStream.flush();
-                            counter = 0;
-                        } catch (IOException e) {
-                            Log.w(TAG, "run: ", e);
-                        }
-                    }
-                }
-            }
-        };
-        handlerThread.start();
-        timeOflastLoggedMessage = System.currentTimeMillis();
-        fileOutputStream = new BufferedOutputStream(new FileOutputStream(file, true));
-    }
-
-    private void log(LogModel model) {
-        gregorianCalendar.setTimeInMillis(model.time);
-        stringBuilder.setLength(0); //
-
-        stringBuilder
-                .append(gregorianCalendar.get(Calendar.HOUR_OF_DAY)).append(":")
-                .append(gregorianCalendar.get(Calendar.MINUTE)).append(":")
-                .append(gregorianCalendar.get(Calendar.SECOND)).append(".")
-                .append(gregorianCalendar.get(Calendar.MILLISECOND)).append(" ")
-                .append(getStringValueForLevel(model.logLevel)).append("/").append(model.threadId).append(" ")
-                .append(model.tag).append("--").append(model.message);
-        if (model.ex != null) {
-            stringBuilder.append(" \n").append(Log.getStackTraceString(model.ex));
-        }
-        stringBuilder.append("\n");
-        byte[] buffer = stringBuilder.toString().getBytes();
-        try {
-            fileOutputStream.write(buffer, 0, buffer.length);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (listener != null) {
-            listener.log(model);
-        }
-        timeOflastLoggedMessage = System.currentTimeMillis();
     }
 
     @NonNull
@@ -180,19 +143,103 @@ public class Logger {
         }
     }
 
+    private void initHandler() throws FileNotFoundException {
+        Log.d(TAG, "initHandler: ");
+        if (handlerThread == null) {
+            handlerThread = new HandlerThread("LoggerThread");
+            handlerThread.start();
+            handler = new Handler(handlerThread.getLooper(), new Handler.Callback() {
+                @Override
+                public boolean handleMessage(Message msg) {
+                    switch (msg.what) {
+                        case MESSAGE_WAKE_UP:
+//                                    Log.d(TAG, "handleMessage: " + msg);
+                            wakeUpAndLog();
+                            return true;
+                    }
+                    return false;
+                }
+            });
+            timeOflastLoggedMessage = System.currentTimeMillis();
+            fileOutputStream = new BufferedOutputStream(new FileOutputStream(file, true));
+        }
+    }
+
+    private void log(LogModel model) {
+        gregorianCalendar.setTimeInMillis(model.time);
+        stringBuilder.setLength(0); // reuse single StringBuilder..
+
+        stringBuilder
+                .append(gregorianCalendar.get(Calendar.HOUR_OF_DAY)).append(":")
+                .append(gregorianCalendar.get(Calendar.MINUTE)).append(":")
+                .append(gregorianCalendar.get(Calendar.SECOND)).append(".")
+                .append(gregorianCalendar.get(Calendar.MILLISECOND)).append(" ")
+                .append(getStringValueForLevel(model.logLevel)).append("/").append(model.threadId).append(" ")
+                .append(model.tag).append("--").append(model.message);
+        if (model.ex != null) {
+            stringBuilder.append(" \n").append(Log.getStackTraceString(model.ex));
+        }
+        stringBuilder.append("\n");
+        byte[] buffer = stringBuilder.toString().getBytes();
+        try {
+            fileOutputStream.write(buffer, 0, buffer.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        Log.d(TAG, "log: " + Thread.currentThread().getId());
+        if (listener != null) {
+            listener.log(model);
+        }
+        timeOflastLoggedMessage = System.currentTimeMillis();
+    }
+
     private void send(@LogLevel int level, String tag, String message, long threadId, Exception ex) {
         if (logLevel <= level) {
             long currentTimeMillis = System.currentTimeMillis();
-            if (currentTimeMillis - timeOflastLoggedMessage > DELAY_BEFORE_SLEEP) {
+            LogModel model = new LogModel(level, tag, message, threadId, currentTimeMillis, ex);
+            logModels.offer(model);
+            if (isInitialized()) {
+                if (!isRunning.get()) {
+                    Message handlerMessage = Message.obtain(handler, MESSAGE_WAKE_UP);
+                    handler.sendMessage(handlerMessage);
+                    // set it here to make sure that during next iteration
+                    // we won't enter to this block.
+                    isRunning.set(true);
+                }
+            } else {
                 try {
                     initHandler();
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
             }
-            LogModel model = new LogModel(logLevel, tag, message, threadId, currentTimeMillis, ex);
-            logModels.offer(model);
         }
+    }
+
+    private void wakeUpAndLog() {
+//        Log.d(TAG, "wakeUpAndLog: " + logModels.size());
+        int counter = 0;
+        isRunning.set(logModels.size() > 0);
+        while (logModels.size() > 0) {
+            LogModel model = logModels.poll();
+            if (model != null) {
+//                Log.d(TAG, "wakeUpAndLog: " + model + ". Size:" + logModels.size());
+                log(model);
+                Log.d(model.tag, model.message + " " + logModels.size());
+            } else {
+                continue;
+            }
+            counter++;
+            if (counter == 50) {
+                try {
+                    fileOutputStream.flush();
+                    counter = 0;
+                } catch (IOException e) {
+                    Log.w(TAG, "run: ", e);
+                }
+            }
+        }
+        isRunning.set(false);
     }
 
     @IntDef({VERBOSE, DEBUG, INFO, WARN, ERROR})

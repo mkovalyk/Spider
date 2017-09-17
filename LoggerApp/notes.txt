@@ -5,12 +5,13 @@ Questions:
 1. Tests
 	- Invoke log.d from different thread
 	- stress testing.
-2. set log level at runtime can cause information leak.
+2. set log level at runtime can cause information leak - problem of end-users..
 3. Copying log files 
 4. Logger internals:
 	- Sleeping and waking up 
 	- Limiting
 5. Use DB? Abstracts from Storage?
+6. When to quit()?
 	
 	
 	
@@ -22,7 +23,7 @@ Issues:
 
 Ideas:
     1. Use queue of already logged models to prevent redundant creation of the models.
-    2. Use handler to wake up thread, go to sleep?
+   +2. Use handler to wake up thread, go to sleep?
     3. set log level
     4. Add copying feature
     5. Add log manager to manage logs
