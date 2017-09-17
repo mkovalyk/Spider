@@ -1,5 +1,6 @@
 package experiments.com.pixellot.logger;
 
+import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
@@ -16,12 +17,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import experiments.com.pixellot.logger.database.DbLogModel;
+import experiments.com.pixellot.logger.database.LogsDao;
+import experiments.com.pixellot.logger.database.LogsDatabase;
 
 /**
  * Created on 17.02.17.
@@ -39,10 +43,12 @@ public class Logger {
     private static final int INFO = 3;
     private static final int VERBOSE = 1;
     private static final int WARN = 4;
+    private final LogsDatabase db;
     //    private static Logger instance;
     private final File file;
     private final GregorianCalendar gregorianCalendar = new GregorianCalendar();
     private final int logLevel;
+    private final LogsDao logsDao;
     private final StringBuilder stringBuilder = new StringBuilder();
     private HandlerThread handlerThread;
     private Queue<LogModel> logModels = new LinkedBlockingQueue<>();
@@ -64,7 +70,8 @@ public class Logger {
                 Log.w(TAG, "");
             }
         }
-
+        db = Room.databaseBuilder(context.getApplicationContext(), LogsDatabase.class, "logs").build();
+        logsDao = db.logsDao();
         file = new File(folder, LoggerUtils.getDefaultFileName());
         file.delete();
         file.createNewFile();
@@ -169,24 +176,32 @@ public class Logger {
         gregorianCalendar.setTimeInMillis(model.time);
         stringBuilder.setLength(0); // reuse single StringBuilder..
 
-        stringBuilder
-                .append(gregorianCalendar.get(Calendar.HOUR_OF_DAY)).append(":")
-                .append(gregorianCalendar.get(Calendar.MINUTE)).append(":")
-                .append(gregorianCalendar.get(Calendar.SECOND)).append(".")
-                .append(gregorianCalendar.get(Calendar.MILLISECOND)).append(" ")
-                .append(getStringValueForLevel(model.logLevel)).append("/").append(model.threadId).append(" ")
-                .append(model.tag).append("--").append(model.message);
+//        stringBuilder
+//                .append(gregorianCalendar.get(Calendar.HOUR_OF_DAY)).append(":")
+//                .append(gregorianCalendar.get(Calendar.MINUTE)).append(":")
+//                .append(gregorianCalendar.get(Calendar.SECOND)).append(".")
+//                .append(gregorianCalendar.get(Calendar.MILLISECOND)).append(" ")
+//                .append(getStringValueForLevel(model.logLevel)).append("/").append(model.threadId).append(" ")
+//                .append(model.tag).append("--").append(model.message);
+//        if (model.ex != null) {
+//            stringBuilder.append(" \n").append(Log.getStackTraceString(model.ex));
+//        }
+//        stringBuilder.append("\n");
+//        byte[] buffer = stringBuilder.toString().getBytes();
+//        try {
+//            fileOutputStream.write(buffer, 0, buffer.length);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        String stacktrace = null;
         if (model.ex != null) {
-            stringBuilder.append(" \n").append(Log.getStackTraceString(model.ex));
+            stacktrace = Log.getStackTraceString(model.ex);
         }
-        stringBuilder.append("\n");
-        byte[] buffer = stringBuilder.toString().getBytes();
-        try {
-            fileOutputStream.write(buffer, 0, buffer.length);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-//        Log.d(TAG, "log: " + Thread.currentThread().getId());
+
+        DbLogModel dbLogModel = new DbLogModel(model.logLevel, model.tag, model.message, model.threadId, model.time, stacktrace);
+        logsDao.insertAll(dbLogModel);
+//        List<DbLogModel> items = logsDao.getAll();
+//        Log.d(TAG, "log: " + items.size());
         if (listener != null) {
             listener.log(model);
         }

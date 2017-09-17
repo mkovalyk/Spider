@@ -16,4 +16,10 @@
         android:layout_height="wrap_content"
         android:text = "Log me"
         android:id="@+id/button"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text = "Copy"
+        android:layout_below="@id/button"
+        android:id="@+id/copy"/>
 </RelativeLayout>

@@ -19,6 +19,9 @@ allprojects {
         google()
     }
 }
+ext {
+   androidCompileSdkVersion=26
+}
 
 task clean(type: Delete) {
     delete rootProject.buildDir
