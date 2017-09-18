@@ -18,7 +18,8 @@ Ideas:
        according to current implementation.
    +2. Use handler to wake up thread, go to sleep?
    +3. set log level - only in constructor to prevent unexpected error during logging.
-    4. Add copying feature
+   +4. Add copying feature
     5. Add log manager to manage logs - ContentProvider
-    6. Use internal app's storage by default.
-    7. Room database.
+   +6. Use internal app's storage by default.
+   +7. Room database.
+   +8. Kotlin
