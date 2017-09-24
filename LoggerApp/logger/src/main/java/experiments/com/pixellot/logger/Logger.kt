@@ -25,12 +25,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 @SuppressWarnings("Unused")
 class Logger
 constructor(context: Context) {
-    private val db: LogsDatabase
+    val db: LogsDatabase
     //    private static Logger instance;
 //    private val file: File
     private val gregorianCalendar = GregorianCalendar()
     private val logLevel: Long
-    private val logsDao: LogsDao
+    val logsDao: LogsDao
     private val stringBuilder = StringBuilder()
     private var handlerThread: HandlerThread? = null
     private val logModels = LinkedBlockingQueue<LogModel>()
@@ -66,7 +66,11 @@ constructor(context: Context) {
     }
 
     fun e(tag: String, message: String) {
-        send(ERROR, tag, message, Thread.currentThread().id, null)
+        e(tag, message, null)
+    }
+
+    fun e(tag: String, message: String, ex: Throwable?) {
+        send(ERROR, tag, message, Thread.currentThread().id, ex)
     }
 
     fun i(tag: String, message: String) {
@@ -103,6 +107,10 @@ constructor(context: Context) {
 
     fun w(tag: String, message: String) {
         send(WARN, tag, message, Thread.currentThread().id, null)
+    }
+
+    fun w(tag: String, message: String, ex: Throwable?) {
+        send(WARN, tag, message, Thread.currentThread().id, ex)
     }
 
     private fun getStringValueForLevel(@LogLevel logLevel: Long): String {
@@ -173,7 +181,7 @@ constructor(context: Context) {
 //        timeOflastLoggedMessage = System.currentTimeMillis()
     }
 
-    private fun send(@LogLevel level: Long, tag: String, message: String, threadId: Long, ex: Exception?) {
+    private fun send(@LogLevel level: Long, tag: String, message: String, threadId: Long, ex: Throwable?) {
         if (logLevel <= level) {
             val currentTimeMillis = System.currentTimeMillis()
             val model = LogModel(level, tag, message, threadId, currentTimeMillis, ex)

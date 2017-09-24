@@ -42,6 +42,15 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.button).setOnClickListener { testBenchmark() }
         findViewById<View>(R.id.copy).setOnClickListener { copy() }
+        findViewById<View>(R.id.clearAll).setOnClickListener { clearAll()}
+    }
+
+    private fun clearAll() {
+        val db = logger.db
+        val logsDao = db.logsDao()
+        Thread({
+            logsDao.clearAll()
+        }).start()
     }
 
     private fun copy() {
@@ -52,7 +61,11 @@ class MainActivity : AppCompatActivity() {
     private fun testBenchmark() {
         val startTime = System.nanoTime()
         for (i in 0 until SIZE) {
-            logger.d("Logger", "Logger->Message" + i)
+            when {
+                i % 25 == 0 -> logger.e("Logger-error", "Message", IllegalStateException("Test"))
+                i % 23 == 0 -> logger.w("Logger-warn", "Message", IllegalArgumentException("Something is wrong"))
+                else -> logger.d("Logger", "Logger->Message" + System.currentTimeMillis())
+            }
         }
         Log.d("LoggerResult", "Logger ->Time:" + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime))
 

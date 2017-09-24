@@ -6,5 +6,5 @@ package experiments.com.pixellot.logger
 
 object C {
     val PREFIX = "LOG"
-    val DB_NAME = "logs"
+    val DB_NAME = "logs.db"
 }
