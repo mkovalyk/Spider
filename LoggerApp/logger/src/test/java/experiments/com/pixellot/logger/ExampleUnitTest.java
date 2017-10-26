@@ -1,7 +1,8 @@
-package experiments.com.pixellot.logger;
+package experiments.com.logger;
 
 import org.junit.Test;
 
+import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.*;
 
 /**

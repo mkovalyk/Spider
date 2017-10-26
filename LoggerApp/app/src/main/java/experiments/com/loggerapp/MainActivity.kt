@@ -1,14 +1,14 @@
-package experiments.com.pixellot.loggerapp
+package experiments.com.loggerapp
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import experiments.com.pixellot.logger.C
-import experiments.com.pixellot.logger.LogModel
-import experiments.com.pixellot.logger.Logger
-import experiments.com.pixellot.logger.LoggerUtils.copyToExternalStorage
+import experiments.com.logger.C
+import experiments.com.logger.LogModel
+import experiments.com.logger.Logger
+import experiments.com.logger.LoggerUtils.copyToExternalStorage
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             })
-            //            Logger.init(this);
         } catch (e: IOException) {
             e.printStackTrace()
             Toast.makeText(this, "Please make sure you have permission to access file", Toast.LENGTH_LONG).show()
@@ -68,12 +67,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         Log.d("LoggerResult", "Logger ->Time:" + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime))
-
-        //        startTime = System.nanoTime();
-        //        for (int i = 0; i < SIZE; i++) {
-        //            Log.d("Logger", "Default->Message" + i);
-        //        }
-        //        Log.d("DefaultLoggerResult", "Time:" + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime));
     }
 
     companion object {

@@ -1,4 +1,4 @@
-package experiments.com.pixellot.logger
+package experiments.com.logger
 
 /**
  * Created on 18.02.17.

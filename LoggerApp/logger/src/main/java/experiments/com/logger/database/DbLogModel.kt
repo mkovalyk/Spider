@@ -1,4 +1,4 @@
-package experiments.com.pixellot.logger.database
+package experiments.com.logger.database
 
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.Ignore

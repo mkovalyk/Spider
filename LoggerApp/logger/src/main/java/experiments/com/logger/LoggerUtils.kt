@@ -1,4 +1,4 @@
-package experiments.com.pixellot.logger
+package experiments.com.logger
 
 import android.content.Context
 import android.os.Environment

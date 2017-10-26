@@ -5,7 +5,7 @@ android {
     compileSdkVersion 26
     buildToolsVersion '26.0.2'
     defaultConfig {
-        applicationId "experiments.com.pixellot.loggerapp"
+        applicationId "experiments.com.loggerapp"
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1

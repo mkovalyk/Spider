@@ -1,4 +1,4 @@
-package experiments.com.pixellot.logger.database;
+package experiments.com.logger.database;
 
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;

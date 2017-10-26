@@ -1,4 +1,4 @@
-package experiments.com.pixellot.logger;
+package experiments.com.logger;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -25,7 +25,7 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("experiments.com.pixellot.logger.test", appContext.getPackageName());
+        assertEquals("experiments.com.logger.test", appContext.getPackageName());
     }
     @Test
     public void testLotOfLogs() throws IOException {

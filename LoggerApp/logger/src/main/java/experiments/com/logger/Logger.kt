@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package experiments.com.pixellot.logger
+package experiments.com.logger
 
 import android.arch.persistence.room.Room
 import android.content.Context
@@ -9,9 +9,9 @@ import android.os.HandlerThread
 import android.os.Message
 import android.support.annotation.IntDef
 import android.util.Log
-import experiments.com.pixellot.logger.database.DbLogModel
-import experiments.com.pixellot.logger.database.LogsDao
-import experiments.com.pixellot.logger.database.LogsDatabase
+import experiments.com.logger.database.DbLogModel
+import experiments.com.logger.database.LogsDao
+import experiments.com.logger.database.LogsDatabase
 import java.io.FileNotFoundException
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue

@@ -1,4 +1,4 @@
-<manifest package="experiments.com.pixellot.logger"
+<manifest package="experiments.com.logger"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application android:allowBackup="true"

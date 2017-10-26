@@ -1,4 +1,4 @@
-package experiments.com.pixellot.loggerapp;
+package experiments.com.loggerapp;
 
 import org.junit.Test;
 

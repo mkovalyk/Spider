@@ -1,4 +1,4 @@
-package experiments.com.pixellot.loggerapp;
+package experiments.com.loggerapp;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("experiments.com.pixellot.loggerapp", appContext.getPackageName());
+        assertEquals("experiments.com.loggerapp", appContext.getPackageName());
     }
 }
