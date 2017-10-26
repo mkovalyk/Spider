@@ -13,7 +13,6 @@ import experiments.com.pixellot.logger.database.DbLogModel
 import experiments.com.pixellot.logger.database.LogsDao
 import experiments.com.pixellot.logger.database.LogsDatabase
 import java.io.FileNotFoundException
-import java.io.IOException
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -26,39 +25,20 @@ import java.util.concurrent.atomic.AtomicBoolean
 class Logger
 constructor(context: Context) {
     val db: LogsDatabase
-    //    private static Logger instance;
-//    private val file: File
     private val gregorianCalendar = GregorianCalendar()
     private val logLevel: Long
     val logsDao: LogsDao
     private val stringBuilder = StringBuilder()
     private var handlerThread: HandlerThread? = null
     private val logModels = LinkedBlockingQueue<LogModel>()
-    //    private var fileOutputStream: BufferedOutputStream? = null
-//    private var timeOflastLoggedMessage: Long = 0
     private val isRunning = AtomicBoolean(false)
     private var listener: Listener? = null
     private var handler: Handler? = null
 
     init {
         logLevel = DEBUG
-
-//        val folder = File(Environment.getExternalStorageDirectory(), "logsFolder")
-//        if (folder.exists() && folder.isFile) {
-//            folder.delete()
-//        }
-//        if (!folder.exists()) {
-//            if (!folder.mkdir()) {
-//                Log.w(TAG, "")
-//            }
-//        }
         db = Room.databaseBuilder<LogsDatabase>(context.applicationContext, LogsDatabase::class.java, C.DB_NAME).build()
         logsDao = db.logsDao()
-//        file = File(folder, LoggerUtils.defaultFileName)
-//        file.delete()
-//        file.createNewFile()
-//        Log.d(TAG, "Logger: " + file.absolutePath)
-        //        initHandler();
     }
 
     fun d(tag: String, message: String) {
@@ -77,11 +57,7 @@ constructor(context: Context) {
         send(INFO, tag, message, Thread.currentThread().id, null)
     }
 
-    @Throws(IOException::class)
     fun init(context: Context) {
-        //        if (instance == null) {
-        //            instance = new Logger(context);
-        //        }
     }
 
     val isInitialized: Boolean
@@ -132,21 +108,18 @@ constructor(context: Context) {
             handler = Handler(handlerThread!!.looper, Handler.Callback { msg ->
                 when (msg.what) {
                     MESSAGE_WAKE_UP -> {
-                        //                                    Log.d(TAG, "handleMessage: " + msg);
                         wakeUpAndLog()
                         return@Callback true
                     }
                 }
                 false
             })
-//            timeOflastLoggedMessage = System.currentTimeMillis()
-//            fileOutputStream = BufferedOutputStream(FileOutputStream(file, true))
         }
     }
 
     private fun log(model: LogModel) {
         gregorianCalendar.timeInMillis = model.time
-        stringBuilder.setLength(0) // reuse single StringBuilder..
+        stringBuilder.setLength(0) // reuse single StringBuilder.. for smaller memory footprint
 
         stringBuilder
                 .append(gregorianCalendar.get(Calendar.DAY_OF_MONTH)).append(".")
@@ -155,18 +128,6 @@ constructor(context: Context) {
                 .append(gregorianCalendar.get(Calendar.MINUTE)).append(":")
                 .append(gregorianCalendar.get(Calendar.SECOND)).append(".")
                 .append(gregorianCalendar.get(Calendar.MILLISECOND)).append(" ")
-        //                .append(getStringValueForLevel(model.logLevel)).append("/").append(model.threadId).append(" ")
-        //                .append(model.tag).append("--").append(model.message);
-        //        if (model.ex != null) {
-        //            stringBuilder.append(" \n").append(Log.getStackTraceString(model.ex));
-        //        }
-        //        stringBuilder.append("\n");
-        //        byte[] buffer = stringBuilder.toString().getBytes();
-        //        try {
-        //            fileOutputStream.write(buffer, 0, buffer.length);
-        //        } catch (IOException e) {
-        //            e.printStackTrace();
-        //        }
         val stacktrace: String =
                 if (model.ex != null) {
                     Log.getStackTraceString(model.ex)
@@ -175,10 +136,7 @@ constructor(context: Context) {
         val dbLogModel = DbLogModel(getStringValueForLevel(model.logLevel), model.tag, model.message,
                 model.threadId, model.time, stringBuilder.toString(), stacktrace)
         logsDao.insertAll(dbLogModel)
-        //        List<DbLogModel> items = logsDao.getAll();
-        //        Log.d(TAG, "log: " + items.size());
         listener?.log(model)
-//        timeOflastLoggedMessage = System.currentTimeMillis()
     }
 
     private fun send(@LogLevel level: Long, tag: String, message: String, threadId: Long, ex: Throwable?) {
@@ -206,12 +164,10 @@ constructor(context: Context) {
     }
 
     private fun wakeUpAndLog() {
-        //        Log.d(TAG, "wakeUpAndLog: " + logModels.size());
         isRunning.set(logModels.size > 0)
         while (logModels.size > 0) {
             val model = logModels.poll()
             if (model != null) {
-                //                Log.d(TAG, "wakeUpAndLog: " + model + ". Size:" + logModels.size());
                 log(model)
                 Log.d(model.tag, model.message + " " + logModels.size)
             } else {
@@ -243,11 +199,11 @@ constructor(context: Context) {
         const val WARN = 4L
 
         fun flush() {
-            //        instance.handler.sendMessage(instance.handler.obtainMessage(FINISH_BATCH));
+            // TODO implement in future
         }
 
         fun sleep() {
-            //        instance.handler.sendMessage(instance.handler.obtainMessage(SLEEP));
+            // TODO implement in future.
         }
     }
 }
