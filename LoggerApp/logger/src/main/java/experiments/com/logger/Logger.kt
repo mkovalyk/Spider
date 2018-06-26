@@ -2,17 +2,12 @@
 
 package experiments.com.logger
 
-import android.arch.persistence.room.Room
 import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
 import android.support.annotation.IntDef
 import android.util.Log
-import experiments.com.logger.database.DbLogModel
-import experiments.com.logger.database.LogsDao
-import experiments.com.logger.database.LogsDatabase
-import java.io.FileNotFoundException
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -23,33 +18,36 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @SuppressWarnings("Unused")
 class Logger
-constructor(context: Context) {
-    val db: LogsDatabase
+constructor(val context: Context, private val logStorage: LogStorage) {
     private val gregorianCalendar = GregorianCalendar()
-    private val logLevel: Long
-    val logsDao: LogsDao
+    private val logLevel: Int
     private val stringBuilder = StringBuilder()
-    private var handlerThread: HandlerThread? = null
+    private val handlerThread: HandlerThread = HandlerThread("LoggerThread")
     private val logModels = LinkedBlockingQueue<LogModel>()
     private val isRunning = AtomicBoolean(false)
-    private var listener: Listener? = null
-    private var handler: Handler? = null
+    private val callback = Handler.Callback { msg ->
+        when (msg.what) {
+            MESSAGE_WAKE_UP -> {
+                wakeUpAndLog()
+                return@Callback true
+            }
+        }
+        false
+    }
+    private val handler by lazy { Handler(handlerThread.looper, callback) }
+
+    private var isInitialized: Boolean = false
+    var listener: Listener? = null
 
     init {
         logLevel = DEBUG
-        db = Room.databaseBuilder<LogsDatabase>(context.applicationContext, LogsDatabase::class.java, C.DB_NAME).build()
-        logsDao = db.logsDao()
     }
 
     fun d(tag: String, message: String) {
         send(DEBUG, tag, message, Thread.currentThread().id, null)
     }
 
-    fun e(tag: String, message: String) {
-        e(tag, message, null)
-    }
-
-    fun e(tag: String, message: String, ex: Throwable?) {
+    fun e(tag: String, message: String, ex: Throwable? = null) {
         send(ERROR, tag, message, Thread.currentThread().id, ex)
     }
 
@@ -57,24 +55,9 @@ constructor(context: Context) {
         send(INFO, tag, message, Thread.currentThread().id, null)
     }
 
-    fun init(context: Context) {
-    }
-
-    val isInitialized: Boolean
-        get() = handlerThread != null && handler != null
-
     fun quit() {
-        if (isInitialized) {
-            handlerThread!!.quitSafely()
-        } else {
-            if (handlerThread != null) {
-                handlerThread!!.quitSafely()
-            }
-        }
-    }
-
-    fun setListener(listener: Listener) {
-        this.listener = listener
+        handlerThread.quitSafely()
+        isInitialized = false
     }
 
     fun v(tag: String, message: String) {
@@ -85,36 +68,14 @@ constructor(context: Context) {
         send(WARN, tag, message, Thread.currentThread().id, null)
     }
 
-    fun w(tag: String, message: String, ex: Throwable?) {
+    fun w(tag: String, message: String, ex: Throwable? = null) {
         send(WARN, tag, message, Thread.currentThread().id, ex)
-    }
-
-    private fun getStringValueForLevel(@LogLevel logLevel: Long): String {
-        return when (logLevel) {
-            DEBUG -> "D"
-            ERROR -> "E"
-            INFO -> "I"
-            VERBOSE -> "V"
-            WARN -> "W"
-            else -> "WTF"
-        }
     }
 
     private fun initHandler() {
         Log.d(TAG, "initHandler: ")
-        if (handlerThread == null) {
-            handlerThread = HandlerThread("LoggerThread")
-            handlerThread!!.start()
-            handler = Handler(handlerThread!!.looper, Handler.Callback { msg ->
-                when (msg.what) {
-                    MESSAGE_WAKE_UP -> {
-                        wakeUpAndLog()
-                        return@Callback true
-                    }
-                }
-                false
-            })
-        }
+        isInitialized = true
+        handlerThread.start()
     }
 
     private fun log(model: LogModel) {
@@ -128,56 +89,44 @@ constructor(context: Context) {
                 .append(gregorianCalendar.get(Calendar.MINUTE)).append(":")
                 .append(gregorianCalendar.get(Calendar.SECOND)).append(".")
                 .append(gregorianCalendar.get(Calendar.MILLISECOND)).append(" ")
-        val stacktrace: String =
-                if (model.ex != null) {
-                    Log.getStackTraceString(model.ex)
-                } else ""
+        model.timeStr = stringBuilder.toString()
 
-        val dbLogModel = DbLogModel(getStringValueForLevel(model.logLevel), model.tag, model.message,
-                model.threadId, model.time, stringBuilder.toString(), stacktrace)
-        logsDao.insertAll(dbLogModel)
+        logStorage.insertAll(model)
         listener?.log(model)
     }
 
-    private fun send(@LogLevel level: Long, tag: String, message: String, threadId: Long, ex: Throwable?) {
+    private fun send(@LogLevel level: Int, tag: String, message: String, threadId: Long, ex: Throwable?) {
         if (logLevel <= level) {
             val currentTimeMillis = System.currentTimeMillis()
             val model = LogModel(level, tag, message, threadId, currentTimeMillis, ex)
             logModels.offer(model)
-            if (isInitialized) {
-                if (!isRunning.get()) {
-                    val handlerMessage = Message.obtain(handler, MESSAGE_WAKE_UP)
-                    handler!!.sendMessage(handlerMessage)
-                    // set it here to make sure that during next iteration
-                    // we won't enter to this block.
-                    isRunning.set(true)
-                }
-            } else {
-                try {
-                    initHandler()
-                } catch (e: FileNotFoundException) {
-                    e.printStackTrace()
-                }
-
+            if (!isInitialized) {
+                initHandler()
+            }
+            if (!isRunning.get()) {
+                val handlerMessage = Message.obtain(handler, MESSAGE_WAKE_UP)
+                handler.sendMessage(handlerMessage)
+                // set it here to make sure that during next iteration
+                // we won't enter to this block.
+                isRunning.set(true)
             }
         }
     }
 
     private fun wakeUpAndLog() {
+        Log.d(TAG, "wakeUpAndLog{${Thread.currentThread().id}}")
         isRunning.set(logModels.size > 0)
-        while (logModels.size > 0) {
-            val model = logModels.poll()
+        do {
+            val model = logModels.poll(30, TimeUnit.SECONDS)
             if (model != null) {
                 log(model)
                 Log.d(model.tag, model.message + " " + logModels.size)
-            } else {
-                continue
             }
-        }
+        } while (logModels.size > 0)
         isRunning.set(false)
     }
 
-    @IntDef(VERBOSE, DEBUG, INFO, WARN, ERROR)
+    @IntDef(VERBOSE.toLong(), DEBUG.toLong(), INFO.toLong(), WARN.toLong(), ERROR.toLong())
     @kotlin.annotation.Retention(value = AnnotationRetention.SOURCE)
     internal annotation class LogLevel
 
@@ -186,17 +135,17 @@ constructor(context: Context) {
     }
 
     companion object {
-        val MESSAGE_WAKE_UP = 1
+        const val MESSAGE_WAKE_UP = 1
         val TAG = Logger::class.java.simpleName
-        const val DEBUG = 2L
+        const val DEBUG = 2
         /**
          * Time after which handler goes to sleep mode.
          */
         private val DELAY_BEFORE_SLEEP = TimeUnit.SECONDS.toMillis(10)
-        const val ERROR = 5L
-        const val INFO = 3L
-        const val VERBOSE = 1L
-        const val WARN = 4L
+        const val ERROR = 5
+        const val INFO = 3
+        const val VERBOSE = 1
+        const val WARN = 4
 
         fun flush() {
             // TODO implement in future

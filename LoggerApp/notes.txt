@@ -1,12 +1,13 @@
 Questions:
 	- When to close the BufferedOutputStream?
 	- Logging from different threads?
+	- How it will work with obfuscation?
 
 1. Tests
 	- Invoke log.d from different thread
 	- stress testing.
 2. set log level at runtime can cause information leak - problem of end-users..
-3. Copying log files 
+3. Copying log files
 4. Use DB? Abstracts from Storage?
 6. When to quit()?
 
@@ -23,3 +24,11 @@ Ideas:
    +6. Use internal app's storage by default.
    +7. Room database.
    +8. Kotlin
+   +9. Use instance class for logging
+    10. Add static implementation
+    11. Extension function to log any method
+    12. Add separate implementation of the persistence storage
+    13. Add automatically removing old messages
+    14. Output as plain text
+    15. Use id as key for all LogModel?
+    16. RoomLogStorage, RealmLogStorage

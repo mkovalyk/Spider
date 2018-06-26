@@ -5,6 +5,5 @@ package experiments.com.logger
  */
 
 object C {
-    val PREFIX = "LOG"
-    val DB_NAME = "logs.db"
+    const val DB_NAME = "logs.db"
 }

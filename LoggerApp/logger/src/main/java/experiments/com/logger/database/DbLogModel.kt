@@ -11,7 +11,7 @@ import android.arch.persistence.room.PrimaryKey
 @Entity(tableName = "logs")
 class DbLogModel {
     @PrimaryKey(autoGenerate = true)
-    var uid: Int = 0
+    var uid: Long = 0
     var logLevel: String? = null
     var tag: String? = null
     var message: String? = null
