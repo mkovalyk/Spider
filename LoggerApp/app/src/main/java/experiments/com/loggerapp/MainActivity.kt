@@ -61,17 +61,19 @@ class MainActivity : AppCompatActivity() {
     private fun testBenchmark() {
         val startTime = System.nanoTime()
         for (i in 0 until SIZE) {
-//            when {
-//                i % 25 == 0 -> logger.e("Logger-error", "Message", IllegalStateException("Test"))
-//                i % 23 == 0 -> logger.w("Logger-warn", "Message", IllegalArgumentException("Something is wrong"))
-//                else -> logger.d("Logger", "Logger->Message" + System.currentTimeMillis())
-            logger.d("Logger", "Logger->Message" + System.currentTimeMillis())
-//            }
+            when {
+                i % 25 == 0 -> logger.e("Logger-error", "Error", IllegalStateException("Test"))
+                i % 24 == 0 -> logger.v("Logger-verbose", "Verbose")
+                i % 22 == 0 -> logger.i("Logger-info", "Info")
+                i % 23 == 0 -> logger.w("Logger-warn", "Warning", IllegalArgumentException("Something is wrong"))
+                else -> logger.d("Logger", "Logger->Message" + System.currentTimeMillis())
+//            logger.d("Logger", "Logger->Message" + System.currentTimeMillis())
+            }
         }
         Log.d("LoggerResult", "Logger ->Time:" + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime))
     }
 
     companion object {
-        const val SIZE = 10
+        const val SIZE = 100
     }
 }

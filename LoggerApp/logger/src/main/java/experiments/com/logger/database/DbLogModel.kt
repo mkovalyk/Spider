@@ -12,7 +12,8 @@ import android.arch.persistence.room.PrimaryKey
 class DbLogModel {
     @PrimaryKey(autoGenerate = true)
     var uid: Long = 0
-    var logLevel: String? = null
+    var logLevelStr: String? = null
+    var logLevel: Byte? = null
     var tag: String? = null
     var message: String? = null
     var timeStr: String? = null
@@ -22,8 +23,9 @@ class DbLogModel {
 
     constructor()
     @Ignore
-    constructor(logLevel: String, tag: String, message: String, threadId: Long, time: Long, timeStr: String?, ex: String) {
+    constructor(logLevel: Byte, logLevelStr: String, tag: String, message: String, threadId: Long, time: Long, timeStr: String?, ex: String) {
         this.logLevel = logLevel
+        this.logLevelStr = logLevelStr
         this.tag = tag
         this.message = message
         this.threadId = threadId

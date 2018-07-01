@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class Logger
 constructor(val context: Context, private val logStorage: LogStorage) {
     private val gregorianCalendar = GregorianCalendar()
-    private val logLevel: Byte
+    private val logLevel: LogLevel
     private val stringBuilder = StringBuilder()
     private val handlerThread: HandlerThread = HandlerThread("LoggerThread")
     private val logModels = LinkedBlockingQueue<LogModel>()
@@ -40,19 +40,19 @@ constructor(val context: Context, private val logStorage: LogStorage) {
     var listener: Listener? = null
 
     init {
-        logLevel = DEBUG
+        logLevel = LogLevel.DEBUG
     }
 
     fun d(tag: String, message: String) {
-        send(DEBUG, tag, message, Thread.currentThread().id, null)
+        send(LogLevel.DEBUG, tag, message, Thread.currentThread().id, null)
     }
 
     fun e(tag: String, message: String, ex: Throwable? = null) {
-        send(ERROR, tag, message, Thread.currentThread().id, ex)
+        send(LogLevel.ERROR, tag, message, Thread.currentThread().id, ex)
     }
 
     fun i(tag: String, message: String) {
-        send(INFO, tag, message, Thread.currentThread().id, null)
+        send(LogLevel.INFO, tag, message, Thread.currentThread().id, null)
     }
 
     fun quit() {
@@ -61,15 +61,15 @@ constructor(val context: Context, private val logStorage: LogStorage) {
     }
 
     fun v(tag: String, message: String) {
-        send(VERBOSE, tag, message, Thread.currentThread().id, null)
+        send(LogLevel.VERBOSE, tag, message, Thread.currentThread().id, null)
     }
 
     fun w(tag: String, message: String) {
-        send(WARN, tag, message, Thread.currentThread().id, null)
+        send(LogLevel.WARNING, tag, message, Thread.currentThread().id, null)
     }
 
     fun w(tag: String, message: String, ex: Throwable? = null) {
-        send(WARN, tag, message, Thread.currentThread().id, ex)
+        send(LogLevel.WARNING, tag, message, Thread.currentThread().id, ex)
     }
 
     private fun initHandler() {
@@ -95,8 +95,8 @@ constructor(val context: Context, private val logStorage: LogStorage) {
         listener?.log(model)
     }
 
-    private fun send(level: Byte, tag: String, message: String, threadId: Long, ex: Throwable?) {
-        if (logLevel <= level) {
+    private fun send(level: LogLevel, tag: String, message: String, threadId: Long, ex: Throwable?) {
+        if (logLevel.priority <= level.priority) {
             val currentTimeMillis = System.currentTimeMillis()
             val model = LogModel(level, tag, message, threadId, currentTimeMillis, ex)
             logModels.offer(model)

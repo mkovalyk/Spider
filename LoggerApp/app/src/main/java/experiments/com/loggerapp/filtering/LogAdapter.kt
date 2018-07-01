@@ -4,8 +4,8 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import experiments.com.logger.LogLevel
 import experiments.com.logger.LogModel
-import experiments.com.logger.Logger
 import experiments.com.loggerapp.R
 import kotlinx.android.synthetic.main.layout_log_item.view.*
 import java.util.*
@@ -30,16 +30,16 @@ class LogAdapter(val logs: MutableList<LogModel>) : RecyclerView.Adapter<LogAdap
     inner class LogViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         fun bind(log: LogModel) {
             val color = when (log.logLevel) {
-                Logger.VERBOSE -> R.color.verbose
-                Logger.DEBUG -> R.color.debug
-                Logger.INFO -> R.color.info
-                Logger.WARN -> R.color.warning
-                Logger.ERROR -> R.color.error
+                LogLevel.VERBOSE -> R.color.verbose
+                LogLevel.DEBUG -> R.color.debug
+                LogLevel.INFO -> R.color.info
+                LogLevel.WARNING -> R.color.warning
+                LogLevel.ERROR -> R.color.error
                 else -> android.R.color.transparent
             }
-            view.parent_layout.setBackgroundColor(color)
             view.date.text = Date(log.time).toString()
             view.log.text = log.message
+            view.log.setTextColor(view.resources.getColor(color))
         }
     }
 }
