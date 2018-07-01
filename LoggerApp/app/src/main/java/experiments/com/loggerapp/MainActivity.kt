@@ -1,31 +1,27 @@
 package experiments.com.loggerapp
 
-import android.arch.persistence.room.Room
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import experiments.com.logger.C
 import experiments.com.logger.LogModel
 import experiments.com.logger.Logger
 import experiments.com.logger.copyToExternalStorage
-import experiments.com.logger.database.LogsDatabase
-import experiments.com.logger.database.RoomLogStorage
+import experiments.com.loggerapp.filtering.FilterActivity
+import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
-    internal lateinit var logger: Logger
+    internal val logger by lazy { (application as TestApplication).logger }
     internal var counter = 0
     internal var startTime: Long = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         try {
-            val db = Room.databaseBuilder<LogsDatabase>(applicationContext, LogsDatabase::class.java, C.DB_NAME).build()
-            val logStorage = RoomLogStorage(db.logsDao())
-            logger = Logger(this, logStorage)
             logger.listener = object : Logger.Listener {
                 override fun log(logModel: LogModel) {
                     if (counter == 0) {
@@ -43,9 +39,10 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Please make sure you have permission to access file", Toast.LENGTH_LONG).show()
         }
 
-        findViewById<View>(R.id.button).setOnClickListener { testBenchmark() }
-        findViewById<View>(R.id.copy).setOnClickListener { copy() }
-        findViewById<View>(R.id.clearAll).setOnClickListener { clearAll() }
+        button.setOnClickListener { testBenchmark() }
+        copy.setOnClickListener { copy() }
+        clearAll.setOnClickListener { clearAll() }
+        filter.setOnClickListener { startActivity(Intent(this@MainActivity, FilterActivity::class.java)) }
     }
 
     private fun clearAll() {

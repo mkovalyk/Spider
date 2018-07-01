@@ -24,4 +24,7 @@ interface LogsDao {
 
     @Insert
     fun insertAll(logModels: List<DbLogModel>)
+
+    @Query("SELECT * FROM logs WHERE time<:to AND time>:from AND logLevel=:level")
+    fun getAll(from: Long, to: Long, level: String): List<DbLogModel>
 }

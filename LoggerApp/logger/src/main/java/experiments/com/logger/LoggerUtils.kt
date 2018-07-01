@@ -23,7 +23,7 @@ fun Context.copyToExternalStorage(filename: String) {
 }
 
 // todo limiting by log level
-fun Int.getStringLevel(): String {
+fun Byte.getStringLevel(): String {
     return when (this) {
         Logger.DEBUG -> "D"
         Logger.ERROR -> "E"
@@ -41,4 +41,21 @@ fun LogModel.toDbModel(): DbLogModel {
             } else ""
     return DbLogModel(logLevel.getStringLevel(), tag, message, threadId, this.time, timeStr, stacktrace)
 }
+
+fun DbLogModel.toModel(): LogModel {
+    return LogModel(logLevel!!.toLogLevel(), tag!!, message!!, threadId, time, Exception(ex))
+}
+
+fun String.toLogLevel(): Byte {
+    return when (this) {
+        "D" -> Logger.DEBUG
+        "E" -> Logger.ERROR
+        "I" -> Logger.INFO
+        "V" -> Logger.VERBOSE
+        "W" -> Logger.WARN
+        else -> throw IllegalStateException("Can find log level for $this")
+    }
+}
+
+
 //}

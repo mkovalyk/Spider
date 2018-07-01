@@ -6,7 +6,6 @@ import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
-import android.support.annotation.IntDef
 import android.util.Log
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
@@ -20,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class Logger
 constructor(val context: Context, private val logStorage: LogStorage) {
     private val gregorianCalendar = GregorianCalendar()
-    private val logLevel: Int
+    private val logLevel: Byte
     private val stringBuilder = StringBuilder()
     private val handlerThread: HandlerThread = HandlerThread("LoggerThread")
     private val logModels = LinkedBlockingQueue<LogModel>()
@@ -36,6 +35,7 @@ constructor(val context: Context, private val logStorage: LogStorage) {
     }
     private val handler by lazy { Handler(handlerThread.looper, callback) }
 
+    @Volatile
     private var isInitialized: Boolean = false
     var listener: Listener? = null
 
@@ -74,8 +74,8 @@ constructor(val context: Context, private val logStorage: LogStorage) {
 
     private fun initHandler() {
         Log.d(TAG, "initHandler: ")
-        isInitialized = true
         handlerThread.start()
+        isInitialized = true
     }
 
     private fun log(model: LogModel) {
@@ -95,7 +95,7 @@ constructor(val context: Context, private val logStorage: LogStorage) {
         listener?.log(model)
     }
 
-    private fun send(@LogLevel level: Int, tag: String, message: String, threadId: Long, ex: Throwable?) {
+    private fun send(level: Byte, tag: String, message: String, threadId: Long, ex: Throwable?) {
         if (logLevel <= level) {
             val currentTimeMillis = System.currentTimeMillis()
             val model = LogModel(level, tag, message, threadId, currentTimeMillis, ex)
@@ -126,10 +126,6 @@ constructor(val context: Context, private val logStorage: LogStorage) {
         isRunning.set(false)
     }
 
-    @IntDef(VERBOSE.toLong(), DEBUG.toLong(), INFO.toLong(), WARN.toLong(), ERROR.toLong())
-    @kotlin.annotation.Retention(value = AnnotationRetention.SOURCE)
-    internal annotation class LogLevel
-
     interface Listener {
         fun log(logModel: LogModel)
     }
@@ -137,15 +133,16 @@ constructor(val context: Context, private val logStorage: LogStorage) {
     companion object {
         const val MESSAGE_WAKE_UP = 1
         val TAG = Logger::class.java.simpleName
-        const val DEBUG = 2
         /**
          * Time after which handler goes to sleep mode.
          */
         private val DELAY_BEFORE_SLEEP = TimeUnit.SECONDS.toMillis(10)
-        const val ERROR = 5
-        const val INFO = 3
-        const val VERBOSE = 1
-        const val WARN = 4
+
+        const val VERBOSE = 1.toByte()
+        const val DEBUG = 2.toByte()
+        const val INFO = 3.toByte()
+        const val WARN = 4.toByte()
+        const val ERROR = 5.toByte()
 
         fun flush() {
             // TODO implement in future

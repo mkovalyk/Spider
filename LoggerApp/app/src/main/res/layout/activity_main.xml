@@ -12,20 +12,29 @@
     tools:context="experiments.com.loggerapp.MainActivity">
 
     <Button
+        android:id="@+id/button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text = "Log me"
-        android:id="@+id/button"/>
+        android:text="Log me"/>
+
     <Button
+        android:id="@+id/copy"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text = "Copy"
         android:layout_below="@id/button"
-        android:id="@+id/copy"/>
+        android:text="Copy"/>
+
     <Button
+        android:id="@+id/clearAll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text = "Clear all"
         android:layout_below="@id/copy"
-        android:id="@+id/clearAll"/>
+        android:text="Clear all"/>
+
+    <Button
+        android:id="@+id/filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/clearAll"
+        android:text="Show all"/>
 </RelativeLayout>

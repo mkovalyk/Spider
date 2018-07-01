@@ -7,16 +7,15 @@ import java.util.*
  * Created on 24.02.2018.
  */
 class Filter constructor(val startDate: Long = Long.MAX_VALUE, val endDate: Long = Long.MIN_VALUE,
-                         val level: Int = Logger.INFO, val tags: List<String>)
+                         val level: Byte = Logger.INFO, val tags: List<String>)
 
 class Builder {
     var startDate: Long = Long.MIN_VALUE
     var endDate: Long = Long.MAX_VALUE
-    @Logger.LogLevel
-    var logLevel: Int = Logger.INFO
+    var logLevel = Logger.INFO
     var tags: List<String> = emptyList()
 
-    fun startingFrom(date: Date)= apply{
+    fun startingFrom(date: Date) = apply {
         startDate = date.time
     }
 
@@ -24,11 +23,11 @@ class Builder {
         endDate = date.time
     }
 
-    fun withLevel(level: Int) = apply{
+    fun withLevel(level: Byte) = apply {
         logLevel = level
     }
 
-    fun withTags(tags: List<String>) = apply{
+    fun withTags(tags: List<String>) = apply {
         this.tags = tags
     }
 
