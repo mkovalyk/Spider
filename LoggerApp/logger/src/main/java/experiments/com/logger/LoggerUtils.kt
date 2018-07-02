@@ -32,3 +32,11 @@ fun LogModel.toDbModel(): DbLogModel {
 fun DbLogModel.toModel(): LogModel {
     return LogModel(LogLevel.getFromString(logLevelStr!!), tag!!, message!!, threadId, time, Exception(ex))
 }
+
+val Logger?.nonNullValue: Logger
+    get() {
+        if (this == null) {
+            throw IllegalStateException("Call init before logging")
+        }
+        return this
+    }

@@ -25,12 +25,12 @@ Ideas:
    +7. Room database.
    +8. Kotlin
    +9. Use instance class for logging
-    10. Add static implementation
+   +10. Add static implementation
     11. Extension function to log any method
    +12. Add separate implementation of the persistence storage
     13. Add automatically removing old messages
     14. Output as plain text
     15. Use id as key for all LogModel?
     16. RoomLogStorage, RealmLogStorage
-    17. Convert to enum LogLevel
-    18. Remove string mapping from "D" to 2 and vise versa
+   +17. Convert to enum LogLevel
+   +18. Remove string mapping from "D" to 2 and vise versa

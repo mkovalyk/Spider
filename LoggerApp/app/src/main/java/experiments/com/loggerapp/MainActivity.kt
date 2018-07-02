@@ -5,24 +5,20 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
-import experiments.com.logger.C
-import experiments.com.logger.LogModel
-import experiments.com.logger.Logger
-import experiments.com.logger.copyToExternalStorage
+import experiments.com.logger.*
 import experiments.com.loggerapp.filtering.FilterActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
-    internal val logger by lazy { (application as TestApplication).logger }
     internal var counter = 0
     internal var startTime: Long = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         try {
-            logger.listener = object : Logger.Listener {
+            Spider.logger?.listener = object : Logger.Listener {
                 override fun log(logModel: LogModel) {
                     if (counter == 0) {
                         startTime = System.nanoTime()
@@ -62,11 +58,11 @@ class MainActivity : AppCompatActivity() {
         val startTime = System.nanoTime()
         for (i in 0 until SIZE) {
             when {
-                i % 25 == 0 -> logger.e("Logger-error", "Error", IllegalStateException("Test"))
-                i % 24 == 0 -> logger.v("Logger-verbose", "Verbose")
-                i % 22 == 0 -> logger.i("Logger-info", "Info")
-                i % 23 == 0 -> logger.w("Logger-warn", "Warning", IllegalArgumentException("Something is wrong"))
-                else -> logger.d("Logger", "Logger->Message" + System.currentTimeMillis())
+                i % 25 == 0 -> Spider.e("Logger-error", "Error", IllegalStateException("Test"))
+                i % 24 == 0 -> Spider.v("Logger-verbose", "Verbose")
+                i % 22 == 0 -> Spider.i("Logger-info", "Info")
+                i % 23 == 0 -> Spider.w("Logger-warn", "Warning", IllegalArgumentException("Something is wrong"))
+                else -> Spider.d("Logger", "Logger->Message" + System.currentTimeMillis())
 //            logger.d("Logger", "Logger->Message" + System.currentTimeMillis())
             }
         }

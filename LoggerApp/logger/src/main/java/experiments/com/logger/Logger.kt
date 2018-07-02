@@ -2,7 +2,6 @@
 
 package experiments.com.logger
 
-import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -17,9 +16,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @SuppressWarnings("Unused")
 class Logger
-constructor(val context: Context, private val logStorage: LogStorage) {
+constructor(private val logStorage: LogStorage, private val logLevel: LogLevel = LogLevel.DEBUG) {
     private val gregorianCalendar = GregorianCalendar()
-    private val logLevel: LogLevel
     private val stringBuilder = StringBuilder()
     private val handlerThread: HandlerThread = HandlerThread("LoggerThread")
     private val logModels = LinkedBlockingQueue<LogModel>()
@@ -38,10 +36,6 @@ constructor(val context: Context, private val logStorage: LogStorage) {
     @Volatile
     private var isInitialized: Boolean = false
     var listener: Listener? = null
-
-    init {
-        logLevel = LogLevel.DEBUG
-    }
 
     fun d(tag: String, message: String) {
         send(LogLevel.DEBUG, tag, message, Thread.currentThread().id, null)
@@ -62,10 +56,6 @@ constructor(val context: Context, private val logStorage: LogStorage) {
 
     fun v(tag: String, message: String) {
         send(LogLevel.VERBOSE, tag, message, Thread.currentThread().id, null)
-    }
-
-    fun w(tag: String, message: String) {
-        send(LogLevel.WARNING, tag, message, Thread.currentThread().id, null)
     }
 
     fun w(tag: String, message: String, ex: Throwable? = null) {
