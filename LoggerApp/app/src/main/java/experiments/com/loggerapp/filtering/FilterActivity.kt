@@ -2,6 +2,7 @@ package experiments.com.loggerapp.filtering
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.AdapterView
@@ -29,6 +30,7 @@ class FilterActivity : AppCompatActivity() {
         val logsAdapter = LogAdapter(mutableListOf())
         list.layoutManager = LinearLayoutManager(this)
         list.adapter = logsAdapter
+        list.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
