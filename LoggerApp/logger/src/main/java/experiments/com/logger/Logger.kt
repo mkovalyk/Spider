@@ -19,7 +19,7 @@ class Logger
 constructor(private val logStorage: LogStorage, private val logLevel: LogLevel = LogLevel.DEBUG) {
     private val gregorianCalendar = GregorianCalendar()
     private val stringBuilder = StringBuilder()
-    private val handlerThread: HandlerThread = HandlerThread("LoggerThread")
+    private lateinit var handlerThread: HandlerThread
     private val logModels = LinkedBlockingQueue<LogModel>()
     private val isRunning = AtomicBoolean(false)
     private val callback = Handler.Callback { msg ->
@@ -28,13 +28,16 @@ constructor(private val logStorage: LogStorage, private val logLevel: LogLevel =
                 wakeUpAndLog()
                 return@Callback true
             }
+            MESSAGE_QUIT -> {
+                quit()
+            }
         }
         false
     }
-    private val handler by lazy { Handler(handlerThread.looper, callback) }
+    private lateinit var handler: Handler
 
     @Volatile
-    private var isInitialized: Boolean = false
+    var isInitialized: AtomicBoolean = AtomicBoolean(false)
     var listener: Listener? = null
 
     fun d(tag: String, message: String) {
@@ -49,9 +52,13 @@ constructor(private val logStorage: LogStorage, private val logLevel: LogLevel =
         send(LogLevel.INFO, tag, message, Thread.currentThread().id, null)
     }
 
-    fun quit() {
-        handlerThread.quitSafely()
-        isInitialized = false
+    private fun quit() {
+        if (handlerThread.quitSafely()) {
+            Log.d(TAG, "Exited safely")
+            isInitialized.set(false)
+        } else {
+            Log.w(TAG, "Couldn't exit safely")
+        }
     }
 
     fun v(tag: String, message: String) {
@@ -63,9 +70,10 @@ constructor(private val logStorage: LogStorage, private val logLevel: LogLevel =
     }
 
     private fun initHandler() {
-        Log.d(TAG, "initHandler: ")
+        isInitialized.set(true)
+        handlerThread = HandlerThread("LoggerThread")
         handlerThread.start()
-        isInitialized = true
+        handler = Handler(handlerThread.looper, callback)
     }
 
     private fun log(model: LogModel) {
@@ -90,7 +98,7 @@ constructor(private val logStorage: LogStorage, private val logLevel: LogLevel =
             val currentTimeMillis = System.currentTimeMillis()
             val model = LogModel(level, tag, message, threadId, currentTimeMillis, ex)
             logModels.offer(model)
-            if (!isInitialized) {
+            if (!isInitialized.get()) {
                 initHandler()
             }
             if (!isRunning.get()) {
@@ -106,6 +114,7 @@ constructor(private val logStorage: LogStorage, private val logLevel: LogLevel =
     private fun wakeUpAndLog() {
         Log.d(TAG, "wakeUpAndLog{${Thread.currentThread().id}}")
         isRunning.set(logModels.size > 0)
+        handler.removeMessages(MESSAGE_QUIT)
         do {
             val model = logModels.poll(30, TimeUnit.SECONDS)
             if (model != null) {
@@ -114,6 +123,8 @@ constructor(private val logStorage: LogStorage, private val logLevel: LogLevel =
             }
         } while (logModels.size > 0)
         isRunning.set(false)
+        val exitMessage = Message.obtain(handler, MESSAGE_QUIT)
+        handler.sendMessageDelayed(exitMessage, DELAY_BEFORE_SLEEP)
     }
 
     interface Listener {
@@ -122,6 +133,7 @@ constructor(private val logStorage: LogStorage, private val logLevel: LogLevel =
 
     companion object {
         const val MESSAGE_WAKE_UP = 1
+        const val MESSAGE_QUIT = 2
         val TAG = Logger::class.java.simpleName
         /**
          * Time after which handler goes to sleep mode.
