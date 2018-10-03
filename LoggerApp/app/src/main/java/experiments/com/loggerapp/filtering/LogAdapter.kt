@@ -39,6 +39,7 @@ class LogAdapter(val logs: MutableList<LogModel>) : RecyclerView.Adapter<LogAdap
             }
             view.date.text = Date(log.time).toString()
             view.log.text = log.message
+            view.details.text = log.ex.toString()
             view.log.setTextColor(view.resources.getColor(color))
         }
     }
